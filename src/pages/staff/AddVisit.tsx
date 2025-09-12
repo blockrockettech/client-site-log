@@ -16,6 +16,7 @@ import { Database } from '@/integrations/supabase/types';
 
 type Site = Database['public']['Tables']['sites']['Row'] & {
   profiles: { full_name: string | null } | null;
+  checklists: { id: number; title: string; items: any[] } | null;
 };
 
 type Checklist = Database['public']['Tables']['checklists']['Row'];
@@ -28,50 +29,87 @@ export default function AddVisit() {
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
 
-  // Fetch sites
-  const { data: sites } = useQuery({
+  // Fetch sites with their assigned checklists
+  const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery({
     queryKey: ['sites'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try with explicit foreign key first
+      let { data, error } = await supabase
         .from('sites')
         .select(`
           *,
           profiles!sites_profile_id_fkey (
             full_name
+          ),
+          checklists!sites_checklist_id_fkey (
+            id,
+            title,
+            items
           )
         `)
         .order('site_name', { ascending: true });
 
-      if (error) throw error;
-      return data as Site[];
-    },
-  });
+      // If that fails, try without explicit foreign key constraint
+      if (error && error.message.includes('foreign key')) {
+        
+        const result = await supabase
+          .from('sites')
+          .select(`
+            *,
+            profiles (
+              full_name
+            )
+          `)
+          .order('site_name', { ascending: true });
 
-  // Fetch checklist for selected site
-  const { data: checklist } = useQuery({
-    queryKey: ['site-checklist', selectedSiteId],
-    queryFn: async () => {
-      if (!selectedSiteId) return null;
+        if (result.error) {
+          throw result.error;
+        }
+
+        // Get checklist data separately for each site
+        const sitesWithChecklists = await Promise.all(
+          result.data.map(async (site) => {
+            if (site.checklist_id) {
+              const { data: checklistData } = await supabase
+                .from('checklists')
+                .select('id, title, items')
+                .eq('id', site.checklist_id)
+                .single();
+              
+              return {
+                ...site,
+                checklists: checklistData
+              };
+            }
+            return {
+              ...site,
+              checklists: null
+            };
+          })
+        );
+
+        data = sitesWithChecklists as any;
+        error = null;
+      }
+
+      if (error) {
+        throw error;
+      }
       
-      const { data, error } = await supabase
-        .from('checklists')
-        .select('*')
-        .eq('site_id', parseInt(selectedSiteId))
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data as Checklist | null;
+      return data as unknown as Site[];
     },
-    enabled: !!selectedSiteId,
   });
 
-  // Update checklist items when checklist changes
+  const selectedSite = sites?.find(site => site.id.toString() === selectedSiteId);
+  const checklist = selectedSite?.checklists;
+
+  // Update checklist items when selected site changes
   React.useEffect(() => {
     if (checklist?.items) {
       const items = Array.isArray(checklist.items) ? checklist.items : [];
       setChecklistItems(items.map((item: any, index: number) => ({
-        id: index,
-        text: typeof item === 'string' ? item : item.text || item.name || `Item ${index + 1}`,
+        id: item.id || `temp-${index}`,
+        text: typeof item === 'string' ? item : item.text || `Item ${index + 1}`,
         completed: false,
         notes: ''
       })));
@@ -150,23 +188,35 @@ export default function AddVisit() {
       return;
     }
 
+    if (!checklist) {
+      toast({
+        title: 'Error',
+        description: 'This site does not have a checklist assigned. Please contact an administrator.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const now = new Date();
+    
+    // Create visit notes with checklist summary
+    const visitNotes = formData.get('notes') as string;
+    const completedCount = checklistItems.filter(item => item.completed).length;
+    const checklistSummary = `\n\n--- Checklist Summary ---\nChecklist: ${checklist.title}\nCompleted: ${completedCount}/${checklistItems.length} items\n\nCompleted Items:\n${checklistItems.filter(item => item.completed).map(item => `✓ ${item.text}${item.notes ? ` - ${item.notes}` : ''}`).join('\n')}\n\nIncomplete Items:\n${checklistItems.filter(item => !item.completed).map(item => `○ ${item.text}`).join('\n')}`;
     
     const visitData = {
       site_id: parseInt(selectedSiteId),
       profile_id: user.id,
-      checklist_id: checklist?.id || null,
+      checklist_id: checklist.id,
       visit_date: formData.get('visit_date') as string,
       visit_checkin_time: now.toISOString(),
       visit_checkout_time: now.toISOString(),
-      notes: formData.get('notes') as string,
+      notes: visitNotes + checklistSummary
     };
 
     createVisitMutation.mutate(visitData);
   };
-
-  const selectedSite = sites?.find(site => site.id.toString() === selectedSiteId);
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -187,9 +237,17 @@ export default function AddVisit() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="site_id">Site</Label>
-              <Select value={selectedSiteId} onValueChange={setSelectedSiteId} required>
+              <Select value={selectedSiteId} onValueChange={setSelectedSiteId} required disabled={sitesLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a site" />
+                  <SelectValue placeholder={
+                    sitesLoading 
+                      ? "Loading sites..." 
+                      : sitesError 
+                        ? "Error loading sites" 
+                        : sites?.length === 0
+                          ? "No sites available"
+                          : "Select a site"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
                   {sites?.map((site) => (
@@ -202,12 +260,17 @@ export default function AddVisit() {
                   ))}
                 </SelectContent>
               </Select>
+              {sitesError && (
+                <p className="text-sm text-destructive mt-1">
+                  Error loading sites: {sitesError.message}
+                </p>
+              )}
             </div>
 
             {selectedSite && (
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h4 className="font-medium mb-2">Site Details</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
                     {selectedSite.site_address}
@@ -219,6 +282,15 @@ export default function AddVisit() {
                       minute: '2-digit'
                     })}
                   </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm pt-2 border-t">
+                  <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">Checklist:</span>
+                  {checklist ? (
+                    <span className="text-success">{checklist.title} ({checklistItems.length} items)</span>
+                  ) : (
+                    <span className="text-destructive">No checklist assigned - Contact admin</span>
+                  )}
                 </div>
               </div>
             )}
@@ -260,14 +332,16 @@ export default function AddVisit() {
           </CardHeader>
         </Card>
 
-        {isCheckedIn && checklistItems.length > 0 && (
+        {isCheckedIn && checklist && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckSquare className="h-5 w-5" />
-                Checklist
+                {checklist.title}
               </CardTitle>
-              <CardDescription>Complete all inspection items</CardDescription>
+              <CardDescription>
+                Complete all inspection items ({checklistItems.filter(item => item.completed).length}/{checklistItems.length} completed)
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -302,6 +376,21 @@ export default function AddVisit() {
           </Card>
         )}
 
+        {isCheckedIn && !checklist && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-destructive">
+                <CheckSquare className="h-5 w-5" />
+                No Checklist Available
+              </CardTitle>
+              <CardDescription>
+                This site doesn't have a checklist assigned. You cannot complete a visit without a checklist.
+                Please contact your administrator to assign a checklist to this site.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Visit Notes</CardTitle>
@@ -319,7 +408,7 @@ export default function AddVisit() {
         <div className="flex gap-4">
           <Button 
             type="submit" 
-            disabled={createVisitMutation.isPending || !isCheckedIn}
+            disabled={createVisitMutation.isPending || !isCheckedIn || !checklist}
             className="min-w-32"
           >
             {createVisitMutation.isPending ? 'Saving...' : 'Complete Visit'}

@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminSites from "./pages/admin/Sites";
 import AdminChecklists from "./pages/admin/Checklists";
+import AdminUsers from "./pages/admin/Users";
 import ClientSites from "./pages/client/Sites";
 import AddVisit from "./pages/staff/AddVisit";
 import NotFound from "./pages/NotFound";
@@ -43,7 +44,7 @@ const App = () => (
               
             {/* Admin routes */}
             <Route path="/admin/checklists" element={<Layout><QueryErrorBoundary><AdminChecklists /></QueryErrorBoundary></Layout>} />
-              <Route path="/admin/users" element={<Layout><div className="p-6">User Management - Coming Soon</div></Layout>} />
+              <Route path="/admin/users" element={<Layout><QueryErrorBoundary><AdminUsers /></QueryErrorBoundary></Layout>} />
               <Route path="/admin/visits" element={<Layout><div className="p-6">All Visits - Coming Soon</div></Layout>} />
               <Route path="/admin/reports" element={<Layout><div className="p-6">Reports - Coming Soon</div></Layout>} />
               <Route path="/admin/settings" element={<Layout><div className="p-6">Settings - Coming Soon</div></Layout>} />
