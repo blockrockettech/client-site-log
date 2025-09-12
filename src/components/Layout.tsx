@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, User } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
+import { Logo } from '@/assets';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,13 +45,16 @@ export function Layout({ children }: LayoutProps) {
           <header className="h-16 flex items-center justify-between px-6 border-b bg-card/50 backdrop-blur">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div>
-                <h2 className="font-semibold text-foreground">FacilityPro</h2>
-                <p className="text-sm text-muted-foreground">
-                  {profile?.role === 'admin' && 'Administrator'}
-                  {profile?.role === 'staff' && 'Staff Member'}
-                  {profile?.role === 'client' && 'Client'}
-                </p>
+              <div className="flex items-center gap-3">
+                <Logo className="h-8 w-8 text-primary" />
+                <div>
+                  <h2 className="font-semibold text-foreground">Proclean 1987</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {profile?.role === 'admin' && 'Administrator'}
+                    {profile?.role === 'staff' && 'Staff Member'}
+                    {profile?.role === 'client' && 'Client'}
+                  </p>
+                </div>
               </div>
             </div>
 

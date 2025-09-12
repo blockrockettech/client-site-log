@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Building2, Clock, User, MapPin, Edit } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { siteSchema, SiteFormData } from '@/lib/validations';
 
 type Site = Database['public']['Tables']['sites']['Row'] & {
   profiles: { full_name: string | null } | null;
@@ -20,6 +24,17 @@ export default function AdminSites() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const queryClient = useQueryClient();
+  
+  const form = useForm<SiteFormData>({
+    resolver: zodResolver(siteSchema),
+    defaultValues: {
+      site_name: '',
+      site_address: '',
+      profile_id: '',
+      visit_day: 'mon',
+      visit_time: '',
+    },
+  });
 
   // Fetch sites with profile data
   const { data: sites, isLoading } = useQuery({
@@ -56,7 +71,7 @@ export default function AdminSites() {
 
   // Create/Update site mutation
   const siteMutation = useMutation({
-    mutationFn: async (siteData: any) => {
+    mutationFn: async (siteData: SiteFormData) => {
       if (editingSite) {
         const { error } = await supabase
           .from('sites')
@@ -66,7 +81,7 @@ export default function AdminSites() {
       } else {
         const { error } = await supabase
           .from('sites')
-          .insert([siteData]);
+          .insert([siteData as Database['public']['Tables']['sites']['Insert']]);
         if (error) throw error;
       }
     },
@@ -74,6 +89,7 @@ export default function AdminSites() {
       queryClient.invalidateQueries({ queryKey: ['admin-sites'] });
       setIsDialogOpen(false);
       setEditingSite(null);
+      form.reset();
       toast({
         title: editingSite ? 'Site updated' : 'Site created',
         description: `Site has been ${editingSite ? 'updated' : 'created'} successfully.`,
@@ -88,24 +104,26 @@ export default function AdminSites() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const siteData = {
-      site_name: formData.get('site_name') as string,
-      site_address: formData.get('site_address') as string,
-      profile_id: formData.get('profile_id') as string,
-      visit_day: formData.get('visit_day') as Database['public']['Enums']['visit_day_enum'],
-      visit_time: formData.get('visit_time') as string,
-    };
-
-    siteMutation.mutate(siteData);
+  const handleSubmit = (data: SiteFormData) => {
+    siteMutation.mutate(data);
   };
 
   const handleEdit = (site: Site) => {
     setEditingSite(site);
+    form.reset({
+      site_name: site.site_name,
+      site_address: site.site_address,
+      profile_id: site.profile_id,
+      visit_day: site.visit_day,
+      visit_time: site.visit_time,
+    });
     setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingSite(null);
+    form.reset();
   };
 
   const formatVisitDay = (day: string) => {
@@ -146,9 +164,12 @@ export default function AdminSites() {
           <p className="text-muted-foreground">Manage all facility sites and assignments</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingSite(null)}>
+            <Button onClick={() => {
+              setEditingSite(null);
+              form.reset();
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               Add Site
             </Button>
@@ -161,85 +182,114 @@ export default function AdminSites() {
               </DialogDescription>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="site_name">Site Name</Label>
-                  <Input
-                    id="site_name"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
                     name="site_name"
-                    defaultValue={editingSite?.site_name || ''}
-                    placeholder="Enter site name"
-                    required
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Site Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter site name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="profile_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Assigned Client</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select client" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {users?.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.full_name || user.id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="profile_id">Assigned Client</Label>
-                  <Select name="profile_id" defaultValue={editingSite?.profile_id || ''} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select client" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {users?.map((user) => (
-                        <SelectItem key={user.id} value={user.id}>
-                          {user.full_name || user.id}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="site_address">Address</Label>
-                <Input
-                  id="site_address"
+                
+                <FormField
+                  control={form.control}
                   name="site_address"
-                  defaultValue={editingSite?.site_address || ''}
-                  placeholder="Enter site address"
-                  required
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter site address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="visit_day">Visit Day</Label>
-                  <Select name="visit_day" defaultValue={editingSite?.visit_day || ''} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mon">Monday</SelectItem>
-                      <SelectItem value="tue">Tuesday</SelectItem>
-                      <SelectItem value="wed">Wednesday</SelectItem>
-                      <SelectItem value="thu">Thursday</SelectItem>
-                      <SelectItem value="fri">Friday</SelectItem>
-                      <SelectItem value="sat">Saturday</SelectItem>
-                      <SelectItem value="sun">Sunday</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="visit_time">Visit Time</Label>
-                  <Input
-                    id="visit_time"
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="visit_day"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Visit Day</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select day" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="mon">Monday</SelectItem>
+                            <SelectItem value="tue">Tuesday</SelectItem>
+                            <SelectItem value="wed">Wednesday</SelectItem>
+                            <SelectItem value="thu">Thursday</SelectItem>
+                            <SelectItem value="fri">Friday</SelectItem>
+                            <SelectItem value="sat">Saturday</SelectItem>
+                            <SelectItem value="sun">Sunday</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="visit_time"
-                    type="time"
-                    defaultValue={editingSite?.visit_time || ''}
-                    required
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Visit Time</FormLabel>
+                        <FormControl>
+                          <Input type="time" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-              
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={siteMutation.isPending}>
-                  {siteMutation.isPending ? 'Saving...' : (editingSite ? 'Update Site' : 'Create Site')}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
+                
+                <div className="flex gap-3 pt-4">
+                  <Button type="submit" disabled={siteMutation.isPending}>
+                    {siteMutation.isPending ? 'Saving...' : (editingSite ? 'Update Site' : 'Create Site')}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleDialogClose}>
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Building2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Logo } from '@/assets';
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
@@ -77,11 +78,11 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-            <Building2 className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-full mb-6">
+            <Logo className="w-12 h-12 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">FacilityPro</h1>
-          <p className="text-muted-foreground">Professional facility management</p>
+          <h1 className="text-3xl font-bold text-foreground">Proclean 1987</h1>
+          <p className="text-muted-foreground">Professional Cleaning Services</p>
         </div>
 
         <Card className="shadow-lg">
