@@ -18,7 +18,7 @@ import { siteSchema, SiteFormData } from '@/lib/validations';
 
 type Site = Database['public']['Tables']['sites']['Row'] & {
   profiles: { full_name: string | null } | null;
-  checklists: { title: string }[] | null;
+  checklists: { title: string } | null;
 };
 
 export default function AdminSites() {
@@ -32,21 +32,22 @@ export default function AdminSites() {
       site_name: '',
       site_address: '',
       profile_id: '',
-      checklist_id: '',
+      checklist_id: 'none',
       visit_day: 'mon',
       visit_time: '',
     },
   });
 
   // Fetch sites with profile and checklist data
-  const { data: sites, isLoading } = useQuery({
+  const { data: sites, isLoading, error } = useQuery({
     queryKey: ['admin-sites'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try the explicit foreign key first
+      let { data, error } = await supabase
         .from('sites')
         .select(`
           *,
-          profiles!sites_profile_id_fkey (
+          profiles (
             full_name
           ),
           checklists!sites_checklist_id_fkey (
@@ -55,8 +56,52 @@ export default function AdminSites() {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as Site[];
+      // If that fails, try without checklist relationship and fetch manually
+      if (error && error.message.includes('more than one relationship')) {
+        
+        const { data: sitesData, error: sitesError } = await supabase
+          .from('sites')
+          .select(`
+            *,
+            profiles (
+              full_name
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (sitesError) throw sitesError;
+
+        // Get checklist info separately for each site
+        const sitesWithChecklists = await Promise.all(
+          sitesData.map(async (site) => {
+            if (site.checklist_id) {
+              const { data: checklistData } = await supabase
+                .from('checklists')
+                .select('title')
+                .eq('id', site.checklist_id)
+                .single();
+              
+              return {
+                ...site,
+                checklists: checklistData
+              };
+            }
+            return {
+              ...site,
+              checklists: null
+            };
+          })
+        );
+
+        data = sitesWithChecklists as any;
+        error = null;
+      }
+
+      if (error) {
+        throw error;
+      }
+      
+      return data as unknown as Site[];
     },
   });
 
@@ -93,7 +138,9 @@ export default function AdminSites() {
     mutationFn: async (siteData: SiteFormData) => {
       const payload = {
         ...siteData,
-        checklist_id: siteData.checklist_id ? parseInt(siteData.checklist_id) : null,
+        checklist_id: siteData.checklist_id && siteData.checklist_id !== 'none' 
+          ? parseInt(siteData.checklist_id) 
+          : null,
       };
 
       if (editingSite) {
@@ -134,13 +181,16 @@ export default function AdminSites() {
 
   const handleEdit = (site: Site) => {
     setEditingSite(site);
+    // Strip seconds from time for HTML time input (HH:MM:SS -> HH:MM)
+    const timeWithoutSeconds = site.visit_time.split(':').slice(0, 2).join(':');
+    
     form.reset({
       site_name: site.site_name,
       site_address: site.site_address,
       profile_id: site.profile_id,
-      checklist_id: site.checklist_id?.toString() || '',
+      checklist_id: site.checklist_id ? site.checklist_id.toString() : 'none',
       visit_day: site.visit_day,
-      visit_time: site.visit_time,
+      visit_time: timeWithoutSeconds,
     });
     setIsDialogOpen(true);
   };
@@ -161,6 +211,12 @@ export default function AdminSites() {
   if (isLoading) {
     return (
       <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Sites Management</h1>
+            <p className="text-muted-foreground">Loading sites...</p>
+          </div>
+        </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -171,6 +227,30 @@ export default function AdminSites() {
             </Card>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Sites Management</h1>
+            <p className="text-muted-foreground text-red-600">Error loading sites: {error.message}</p>
+          </div>
+        </div>
+        <Card className="text-center py-12">
+          <CardContent>
+            <h3 className="text-lg font-semibold mb-2 text-red-600">Failed to load sites</h3>
+            <p className="text-muted-foreground mb-4">
+              {error.message}
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Refresh Page
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -193,7 +273,14 @@ export default function AdminSites() {
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingSite(null);
-              form.reset();
+              form.reset({
+                site_name: '',
+                site_address: '',
+                profile_id: '',
+                checklist_id: 'none',
+                visit_day: 'mon',
+                visit_time: '',
+              });
               setIsDialogOpen(true);
             }}>
               <Plus className="mr-2 h-4 w-4" />
@@ -263,7 +350,7 @@ export default function AdminSites() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">No checklist</SelectItem>
+                          <SelectItem value="none">No checklist</SelectItem>
                           {checklists?.map((checklist) => (
                             <SelectItem key={checklist.id} value={checklist.id.toString()}>
                               {checklist.title}
@@ -396,8 +483,8 @@ export default function AdminSites() {
                   <CheckSquare className="h-4 w-4" />
                   Checklist
                 </span>
-                <Badge variant={site.checklists?.[0]?.title ? "default" : "outline"}>
-                  {site.checklists?.[0]?.title || 'No checklist'}
+                <Badge variant={site.checklists?.title ? "default" : "outline"}>
+                  {site.checklists?.title || 'No checklist'}
                 </Badge>
               </div>
             </CardContent>

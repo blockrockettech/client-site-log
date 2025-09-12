@@ -23,12 +23,17 @@ export const siteSchema = z.object({
   site_address: z.string().min(1, "Site address is required")
     .max(200, "Site address must be less than 200 characters"),
   profile_id: z.string().uuid("Please select a valid client"),
-  checklist_id: z.string().optional().nullable(),
+  checklist_id: z.string().optional(),
   visit_day: z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"], {
     errorMap: () => ({ message: "Please select a valid visit day" })
   }),
-  visit_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 
-    "Please enter a valid time in HH:MM format"),
+  visit_time: z.string()
+    .refine((time) => {
+      // Accept both HH:MM and HH:MM:SS formats (24-hour)
+      const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+      const isValid = timeRegex.test(time.trim());
+      return isValid;
+    }, "Please enter a valid time in HH:MM format"),
 });
 
 // Visit management schemas
