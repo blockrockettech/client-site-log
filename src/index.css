@@ -18,108 +18,106 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
 
-    /* Professional blue primary */
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --primary-light: 221 83% 63%;
-    --primary-dark: 221 83% 43%;
+    /* Deep sage green primary - inspired by Proclean 1987 branding */
+    --primary: 145 40% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 145 35% 55%;
+    --primary-dark: 145 45% 35%;
 
-    /* Clean secondary grays */
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 224 71% 4%;
+    /* Warm secondary - complementary coral/peach */
+    --secondary: 15 30% 90%;
+    --secondary-foreground: 145 25% 25%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 150 10% 96%;
+    --muted-foreground: 150 5% 46%;
 
-    --accent: 212 95% 95%;
-    --accent-foreground: 221 83% 53%;
+    /* Tertiary accent - deeper sage */
+    --accent: 145 25% 93%;
+    --accent-foreground: 145 25% 35%;
 
-    /* Success green for completed items */
-    --success: 142 76% 36%;
-    --success-foreground: 355 100% 97%;
-    --success-light: 142 76% 46%;
+    /* Success green - deeper sage tone */
+    --success: 145 40% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 145 40% 55%;
 
-    /* Warning orange */
-    --warning: 32 95% 44%;
-    --warning-foreground: 355 100% 97%;
+    /* Warning - warm coral */
+    --warning: 25 85% 60%;
+    --warning-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 145 15% 88%;
+    --input: 145 15% 88%;
+    --ring: 145 40% 45%;
 
     --radius: 0.75rem;
 
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(221 83% 43%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 14% 98%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 99%));
+    /* Custom gradients - deep sage green theme */
+    --gradient-primary: linear-gradient(135deg, hsl(145 40% 45%), hsl(145 45% 35%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(150 10% 98%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(145 10% 99%));
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
-    --shadow-card: 0 1px 3px 0 hsl(221 83% 53% / 0.1), 0 1px 2px -1px hsl(221 83% 53% / 0.1);
+    /* Shadows with sage tint */
+    --shadow-sm: 0 1px 2px 0 hsl(145 10% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(145 10% 0% / 0.08), 0 2px 4px -2px hsl(145 10% 0% / 0.08);
+    --shadow-lg: 0 10px 15px -3px hsl(145 10% 0% / 0.08), 0 4px 6px -4px hsl(145 10% 0% / 0.08);
+    --shadow-card: 0 1px 3px 0 hsl(145 25% 65% / 0.12), 0 1px 2px -1px hsl(145 25% 65% / 0.12);
 
     /* Animations */
     --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar - sage green theme */
+    --sidebar-background: 145 10% 98%;
+    --sidebar-foreground: 145 15% 26%;
+    --sidebar-primary: 145 40% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 145 15% 95%;
+    --sidebar-accent-foreground: 145 25% 35%;
+    --sidebar-border: 145 15% 88%;
+    --sidebar-ring: 145 40% 45%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 145 15% 6%;
+    --foreground: 145 10% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 145 15% 8%;
+    --card-foreground: 145 10% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 145 15% 8%;
+    --popover-foreground: 145 10% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark mode deep sage green primary */
+    --primary: 145 35% 60%;
+    --primary-foreground: 145 25% 15%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 145 10% 18%;
+    --secondary-foreground: 145 10% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 145 10% 15%;
+    --muted-foreground: 145 8% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 145 10% 18%;
+    --accent-foreground: 145 25% 85%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 145 10% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 145 10% 20%;
+    --input: 145 10% 20%;
+    --ring: 145 35% 60%;
+    
+    /* Dark mode sidebar */
+    --sidebar-background: 145 15% 8%;
+    --sidebar-foreground: 145 10% 85%;
+    --sidebar-primary: 145 35% 60%;
+    --sidebar-primary-foreground: 145 25% 15%;
+    --sidebar-accent: 145 10% 15%;
+    --sidebar-accent-foreground: 145 10% 85%;
+    --sidebar-border: 145 10% 20%;
+    --sidebar-ring: 145 35% 60%;
   }
 }
 

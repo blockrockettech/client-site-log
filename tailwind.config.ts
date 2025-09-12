@@ -68,6 +68,31 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Extended Proclean 1987 color palette
+        sage: {
+          50: "hsl(145 25% 95%)",
+          100: "hsl(145 25% 90%)",
+          200: "hsl(145 30% 80%)",
+          300: "hsl(145 35% 70%)",
+          400: "hsl(145 35% 55%)",
+          500: "hsl(145 40% 45%)", // New Primary - Deeper Green
+          600: "hsl(145 45% 35%)",
+          700: "hsl(145 45% 25%)",
+          800: "hsl(145 40% 18%)",
+          900: "hsl(145 35% 12%)",
+        },
+        coral: {
+          50: "hsl(15 30% 95%)",
+          100: "hsl(15 30% 90%)", // Secondary
+          200: "hsl(15 40% 85%)",
+          300: "hsl(15 50% 75%)",
+          400: "hsl(25 65% 65%)",
+          500: "hsl(25 75% 55%)",
+          600: "hsl(25 85% 50%)",
+          700: "hsl(25 85% 45%)",
+          800: "hsl(25 85% 40%)",
+          900: "hsl(25 85% 35%)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

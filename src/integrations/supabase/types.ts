@@ -126,7 +126,7 @@ export type Database = {
       }
       visits: {
         Row: {
-          checklist_id: number
+          checklist_id: number | null
           created_at: string
           id: number
           notes: string | null
@@ -138,7 +138,7 @@ export type Database = {
           visit_date: string
         }
         Insert: {
-          checklist_id: number
+          checklist_id?: number | null
           created_at?: string
           id?: number
           notes?: string | null
@@ -150,7 +150,7 @@ export type Database = {
           visit_date: string
         }
         Update: {
-          checklist_id?: number
+          checklist_id?: number | null
           created_at?: string
           id?: number
           notes?: string | null

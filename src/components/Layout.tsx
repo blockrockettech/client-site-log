@@ -83,7 +83,7 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </header>
 
-          <main className="flex-1 bg-gradient-to-br from-background to-muted/20">
+          <main className="flex-1 bg-gradient-to-br from-background via-sage-50/30 to-accent/40">
             {children}
           </main>
         </div>

@@ -120,12 +120,6 @@ export default function AdminSites() {
     setIsDialogOpen(true);
   };
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingSite(null);
-    form.reset();
-  };
-
   const formatVisitDay = (day: string) => {
     const days: { [key: string]: string } = {
       mon: 'Monday',
@@ -164,11 +158,18 @@ export default function AdminSites() {
           <p className="text-muted-foreground">Manage all facility sites and assignments</p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingSite(null);
+            form.reset();
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingSite(null);
               form.reset();
+              setIsDialogOpen(true);
             }}>
               <Plus className="mr-2 h-4 w-4" />
               Add Site
@@ -284,7 +285,7 @@ export default function AdminSites() {
                   <Button type="submit" disabled={siteMutation.isPending}>
                     {siteMutation.isPending ? 'Saving...' : (editingSite ? 'Update Site' : 'Create Site')}
                   </Button>
-                  <Button type="button" variant="outline" onClick={handleDialogClose}>
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
                 </div>
