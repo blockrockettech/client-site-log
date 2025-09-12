@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminSites from "./pages/admin/Sites";
+import AdminChecklists from "./pages/admin/Checklists";
 import ClientSites from "./pages/client/Sites";
 import AddVisit from "./pages/staff/AddVisit";
 import NotFound from "./pages/NotFound";
@@ -40,8 +41,8 @@ const App = () => (
               <Route path="/client/sites" element={<Layout><QueryErrorBoundary><ClientSites /></QueryErrorBoundary></Layout>} />
               <Route path="/client/visits" element={<Layout><div className="p-6">Client Visits - Coming Soon</div></Layout>} />
               
-              {/* Admin placeholder routes */}
-              <Route path="/admin/checklists" element={<Layout><div className="p-6">Checklists Management - Coming Soon</div></Layout>} />
+            {/* Admin routes */}
+            <Route path="/admin/checklists" element={<Layout><QueryErrorBoundary><AdminChecklists /></QueryErrorBoundary></Layout>} />
               <Route path="/admin/users" element={<Layout><div className="p-6">User Management - Coming Soon</div></Layout>} />
               <Route path="/admin/visits" element={<Layout><div className="p-6">All Visits - Coming Soon</div></Layout>} />
               <Route path="/admin/reports" element={<Layout><div className="p-6">Reports - Coming Soon</div></Layout>} />

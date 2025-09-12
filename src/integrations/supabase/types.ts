@@ -19,7 +19,6 @@ export type Database = {
           created_at: string
           id: number
           items: Json
-          site_id: number
           title: string
           updated_at: string
         }
@@ -27,7 +26,6 @@ export type Database = {
           created_at?: string
           id?: number
           items?: Json
-          site_id: number
           title?: string
           updated_at?: string
         }
@@ -35,19 +33,10 @@ export type Database = {
           created_at?: string
           id?: number
           items?: Json
-          site_id?: number
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "checklists_site_id_fkey"
-            columns: ["site_id"]
-            isOneToOne: true
-            referencedRelation: "sites"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {

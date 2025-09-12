@@ -12,12 +12,13 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Building2, Clock, User, MapPin, Edit } from 'lucide-react';
+import { Plus, Building2, Clock, User, MapPin, Edit, CheckSquare } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { siteSchema, SiteFormData } from '@/lib/validations';
 
 type Site = Database['public']['Tables']['sites']['Row'] & {
   profiles: { full_name: string | null } | null;
+  checklists: { title: string }[] | null;
 };
 
 export default function AdminSites() {
@@ -31,12 +32,13 @@ export default function AdminSites() {
       site_name: '',
       site_address: '',
       profile_id: '',
+      checklist_id: '',
       visit_day: 'mon',
       visit_time: '',
     },
   });
 
-  // Fetch sites with profile data
+  // Fetch sites with profile and checklist data
   const { data: sites, isLoading } = useQuery({
     queryKey: ['admin-sites'],
     queryFn: async () => {
@@ -46,6 +48,9 @@ export default function AdminSites() {
           *,
           profiles!sites_profile_id_fkey (
             full_name
+          ),
+          checklists!sites_checklist_id_fkey (
+            title
           )
         `)
         .order('created_at', { ascending: false });
@@ -69,19 +74,38 @@ export default function AdminSites() {
     },
   });
 
+  // Fetch checklists for assignment
+  const { data: checklists } = useQuery({
+    queryKey: ['checklists'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('checklists')
+        .select('id, title')
+        .order('title', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Create/Update site mutation
   const siteMutation = useMutation({
     mutationFn: async (siteData: SiteFormData) => {
+      const payload = {
+        ...siteData,
+        checklist_id: siteData.checklist_id ? parseInt(siteData.checklist_id) : null,
+      };
+
       if (editingSite) {
         const { error } = await supabase
           .from('sites')
-          .update(siteData)
+          .update(payload)
           .eq('id', editingSite.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('sites')
-          .insert([siteData as Database['public']['Tables']['sites']['Insert']]);
+          .insert([payload as Database['public']['Tables']['sites']['Insert']]);
         if (error) throw error;
       }
     },
@@ -114,6 +138,7 @@ export default function AdminSites() {
       site_name: site.site_name,
       site_address: site.site_address,
       profile_id: site.profile_id,
+      checklist_id: site.checklist_id?.toString() || '',
       visit_day: site.visit_day,
       visit_time: site.visit_time,
     });
@@ -224,6 +249,32 @@ export default function AdminSites() {
                     )}
                   />
                 </div>
+                
+                <FormField
+                  control={form.control}
+                  name="checklist_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Inspection Checklist</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select checklist (optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">No checklist</SelectItem>
+                          {checklists?.map((checklist) => (
+                            <SelectItem key={checklist.id} value={checklist.id.toString()}>
+                              {checklist.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <FormField
                   control={form.control}
@@ -338,6 +389,16 @@ export default function AdminSites() {
                     })}
                   </div>
                 </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <CheckSquare className="h-4 w-4" />
+                  Checklist
+                </span>
+                <Badge variant={site.checklists?.[0]?.title ? "default" : "outline"}>
+                  {site.checklists?.[0]?.title || 'No checklist'}
+                </Badge>
               </div>
             </CardContent>
           </Card>

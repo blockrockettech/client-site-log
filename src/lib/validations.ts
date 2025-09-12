@@ -23,6 +23,7 @@ export const siteSchema = z.object({
   site_address: z.string().min(1, "Site address is required")
     .max(200, "Site address must be less than 200 characters"),
   profile_id: z.string().uuid("Please select a valid client"),
+  checklist_id: z.string().optional().nullable(),
   visit_day: z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"], {
     errorMap: () => ({ message: "Please select a valid visit day" })
   }),
@@ -40,18 +41,18 @@ export const visitSchema = z.object({
 
 // Checklist item schema
 export const checklistItemSchema = z.object({
-  text: z.string().min(1, "Checklist item text is required")
-    .max(200, "Checklist item text must be less than 200 characters"),
-  completed: z.boolean().default(false),
+  id: z.string().optional(),
+  text: z.string().min(1, "Task description is required")
+    .max(200, "Task description must be less than 200 characters"),
+  completed: z.boolean().default(false).optional(),
   notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
 });
 
-// Checklist schema
+// Checklist management schema
 export const checklistSchema = z.object({
-  title: z.string().min(1, "Checklist title is required")
-    .max(100, "Checklist title must be less than 100 characters"),
-  items: z.array(checklistItemSchema).min(1, "At least one checklist item is required"),
-  site_id: z.number().positive("Please select a valid site"),
+  title: z.string().min(1, "Checklist name is required")
+    .max(100, "Checklist name must be less than 100 characters"),
+  items: z.array(checklistItemSchema).min(1, "At least one task is required"),
 });
 
 // Profile update schema
