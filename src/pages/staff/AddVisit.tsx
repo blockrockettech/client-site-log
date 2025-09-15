@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, CheckSquare, Building2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, CheckSquare, Building2, Plus } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type Site = Database['public']['Tables']['sites']['Row'] & {
@@ -25,9 +25,18 @@ export default function AddVisit() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [checklistItems, setChecklistItems] = useState<any[]>([]);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+  // Pre-select site from URL parameter
+  useEffect(() => {
+    const siteParam = searchParams.get('site');
+    if (siteParam) {
+      setSelectedSiteId(siteParam);
+    }
+  }, [searchParams]);
 
   // Fetch sites with their assigned checklists
   const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery({
@@ -220,9 +229,12 @@ export default function AddVisit() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Add New Visit</h1>
-        <p className="text-muted-foreground">Record a new site visit and complete the checklist</p>
+      <div className="flex items-center mb-6">
+        <Plus className="mr-3 h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Add New Visit</h1>
+          <p className="text-muted-foreground">Record a new site visit and complete the checklist</p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -252,10 +264,7 @@ export default function AddVisit() {
                 <SelectContent>
                   {sites?.map((site) => (
                     <SelectItem key={site.id} value={site.id.toString()}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{site.site_name}</span>
-                        <span className="text-sm text-muted-foreground">{site.site_address}</span>
-                      </div>
+                      {site.site_name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -308,7 +317,8 @@ export default function AddVisit() {
           </CardContent>
         </Card>
 
-        <Card>
+        {selectedSite && (
+          <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 justify-between">
               <div className="flex items-center gap-2">
@@ -330,9 +340,10 @@ export default function AddVisit() {
               Check in to start your visit and begin the inspection
             </CardDescription>
           </CardHeader>
-        </Card>
+          </Card>
+        )}
 
-        {isCheckedIn && checklist && (
+        {selectedSite && isCheckedIn && checklist && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -376,7 +387,7 @@ export default function AddVisit() {
           </Card>
         )}
 
-        {isCheckedIn && !checklist && (
+        {selectedSite && isCheckedIn && !checklist && (
           <Card className="border-destructive/50 bg-destructive/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
@@ -391,32 +402,36 @@ export default function AddVisit() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Visit Notes</CardTitle>
-            <CardDescription>Add any additional observations or comments</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              name="notes"
-              placeholder="Enter your visit notes here..."
-              rows={4}
-            />
-          </CardContent>
-        </Card>
+        {selectedSite && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Visit Notes</CardTitle>
+              <CardDescription>Add any additional observations or comments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                name="notes"
+                placeholder="Enter your visit notes here..."
+                rows={4}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-        <div className="flex gap-4">
-          <Button 
-            type="submit" 
-            disabled={createVisitMutation.isPending || !isCheckedIn || !checklist}
-            className="min-w-32"
-          >
-            {createVisitMutation.isPending ? 'Saving...' : 'Complete Visit'}
-          </Button>
-          <Button type="button" variant="outline" onClick={() => navigate('/staff/visits')}>
-            Cancel
-          </Button>
-        </div>
+        {selectedSite && (
+          <div className="flex gap-4">
+            <Button 
+              type="submit" 
+              disabled={createVisitMutation.isPending || !isCheckedIn || !checklist}
+              className="min-w-32"
+            >
+              {createVisitMutation.isPending ? 'Saving...' : 'Complete Visit'}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => navigate('/staff/visits')}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   );

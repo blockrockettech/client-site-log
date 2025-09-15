@@ -62,10 +62,14 @@ export function AppSidebar() {
   const menuItems = getMenuItems();
 
   const isActive = (path: string) => {
+    // Exact match for homepage
     if (path === '/') {
       return currentPath === '/';
     }
-    return currentPath.startsWith(path);
+    
+    // For all other paths, use exact match only
+    // This prevents /staff/visits from matching /staff/visits/new
+    return currentPath === path;
   };
 
   const getNavClass = (path: string) => {

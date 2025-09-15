@@ -14,6 +14,8 @@ import AdminChecklists from "./pages/admin/Checklists";
 import AdminUsers from "./pages/admin/Users";
 import ClientSites from "./pages/client/Sites";
 import AddVisit from "./pages/staff/AddVisit";
+import StaffVisits from "./pages/staff/Visits";
+import StaffSites from "./pages/staff/Sites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,8 +37,8 @@ const App = () => (
               
               {/* Staff Routes */}
               <Route path="/staff/visits/new" element={<Layout><QueryErrorBoundary><AddVisit /></QueryErrorBoundary></Layout>} />
-              <Route path="/staff/sites" element={<Layout><div className="p-6">Staff Sites - Coming Soon</div></Layout>} />
-              <Route path="/staff/visits" element={<Layout><div className="p-6">Staff Visits - Coming Soon</div></Layout>} />
+              <Route path="/staff/sites" element={<Layout><QueryErrorBoundary><StaffSites /></QueryErrorBoundary></Layout>} />
+              <Route path="/staff/visits" element={<Layout><QueryErrorBoundary><StaffVisits /></QueryErrorBoundary></Layout>} />
               
               {/* Client Routes */}
               <Route path="/client/sites" element={<Layout><QueryErrorBoundary><ClientSites /></QueryErrorBoundary></Layout>} />
