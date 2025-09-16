@@ -7,9 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Calendar, MapPin, Clock, CheckSquare, FileText, Eye, User, Building2, Filter } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckSquare, FileText, Eye, User, Building2 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 
 type Visit = Database['public']['Tables']['visits']['Row'] & {
@@ -34,9 +32,6 @@ type Visit = Database['public']['Tables']['visits']['Row'] & {
 export default function AdminVisits() {
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [filterStaff, setFilterStaff] = useState<string>('all');
-  const [filterClient, setFilterClient] = useState<string>('all');
-  const [searchSite, setSearchSite] = useState('');
 
   // Fetch all visits with complete relationship data
   const { data: visits, isLoading } = useQuery({
@@ -89,35 +84,7 @@ export default function AdminVisits() {
     },
   });
 
-  // Get unique staff members and clients for filters
-  const { data: filterData } = useQuery({
-    queryKey: ['admin-visits-filter-data'],
-    queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, role')
-        .in('role', ['staff', 'client'])
-        .order('full_name');
 
-      if (error) throw error;
-
-      const staff = profiles.filter(p => p.role === 'staff');
-      const clients = profiles.filter(p => p.role === 'client');
-
-      return { staff, clients };
-    },
-  });
-
-  // Filter visits based on selected criteria
-  const filteredVisits = visits?.filter(visit => {
-    const staffMatch = filterStaff === 'all' || visit.profile_id === filterStaff;
-    const clientMatch = filterClient === 'all' || visit.sites?.profile_id === filterClient;
-    const siteMatch = searchSite === '' || 
-      visit.sites?.site_name.toLowerCase().includes(searchSite.toLowerCase()) ||
-      visit.sites?.site_address.toLowerCase().includes(searchSite.toLowerCase());
-
-    return staffMatch && clientMatch && siteMatch;
-  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -165,11 +132,6 @@ export default function AdminVisits() {
     setIsDialogOpen(true);
   };
 
-  const resetFilters = () => {
-    setFilterStaff('all');
-    setFilterClient('all');
-    setSearchSite('');
-  };
 
   if (isLoading) {
     return (
@@ -214,84 +176,22 @@ export default function AdminVisits() {
         </div>
         <div className="flex gap-3">
           <Badge variant="outline" className="text-sm">
-            {filteredVisits?.length || 0} / {visits?.length || 0} Visits
+            {visits?.length || 0} Visits
           </Badge>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Staff Member</label>
-              <Select value={filterStaff} onValueChange={setFilterStaff}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Staff" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Staff</SelectItem>
-                  {filterData?.staff.map(staff => (
-                    <SelectItem key={staff.id} value={staff.id}>
-                      {staff.full_name || 'Unnamed Staff'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Site Owner (Client)</label>
-              <Select value={filterClient} onValueChange={setFilterClient}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Clients" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Clients</SelectItem>
-                  {filterData?.clients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name || 'Unnamed Client'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Search Sites</label>
-              <Input
-                placeholder="Site name or address..."
-                value={searchSite}
-                onChange={(e) => setSearchSite(e.target.value)}
-              />
-            </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" onClick={resetFilters}>
-                Clear Filters
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Visits Table */}
       <Card>
         <CardContent className="pt-6">
-          {filteredVisits && filteredVisits.length > 0 ? (
+          {visits && visits.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Site</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Staff Member</TableHead>
-                  <TableHead>Site Owner</TableHead>
                   <TableHead>Checklist</TableHead>
                   <TableHead>Completion</TableHead>
                   <TableHead>Time</TableHead>
@@ -299,7 +199,7 @@ export default function AdminVisits() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredVisits.map((visit) => (
+                {visits.map((visit) => (
                   <TableRow key={visit.id}>
                     <TableCell>
                       <div className="space-y-1">
@@ -308,8 +208,8 @@ export default function AdminVisits() {
                           {visit.sites?.site_name || 'Unknown Site'}
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {visit.sites?.site_address || 'No address'}
+                          <User className="h-3 w-3" />
+                          {visit.site_owner?.full_name || 'Unassigned'}
                         </div>
                       </div>
                     </TableCell>
@@ -324,14 +224,6 @@ export default function AdminVisits() {
                         <User className="h-4 w-4 text-muted-foreground" />
                         <Badge variant="default">
                           {visit.profiles?.full_name || 'Unknown Staff'}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <Badge variant="secondary">
-                          {visit.site_owner?.full_name || 'Unassigned'}
                         </Badge>
                       </div>
                     </TableCell>
@@ -374,19 +266,11 @@ export default function AdminVisits() {
             <div className="text-center py-12">
               <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-semibold mb-2">
-                {visits?.length === 0 ? 'No visits yet' : 'No visits match your filters'}
+                No visits yet
               </h3>
               <p className="text-muted-foreground mb-4">
-                {visits?.length === 0 
-                  ? 'No visits have been recorded in the system yet.'
-                  : 'Try adjusting your filters or clearing them to see more results.'
-                }
+                No visits have been recorded in the system yet.
               </p>
-              {visits && visits.length > 0 && filteredVisits?.length === 0 && (
-                <Button variant="outline" onClick={resetFilters}>
-                  Clear All Filters
-                </Button>
-              )}
             </div>
           )}
         </CardContent>
@@ -434,25 +318,13 @@ export default function AdminVisits() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm text-muted-foreground">Staff Member</h4>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="default">
-                      {selectedVisit.profiles?.full_name || 'Unknown Staff'}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm text-muted-foreground">Site Owner</h4>
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="secondary">
-                      {selectedVisit.site_owner?.full_name || 'Unassigned'}
-                    </Badge>
-                  </div>
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Staff Member</h4>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <Badge variant="default">
+                    {selectedVisit.profiles?.full_name || 'Unknown Staff'}
+                  </Badge>
                 </div>
               </div>
 

@@ -45,7 +45,7 @@ export function AppSidebar() {
         ...baseItems,
         { title: 'My Sites', url: '/staff/sites', icon: Building2 },
         { title: 'Add Visit', url: '/staff/visits/new', icon: Calendar },
-        { title: 'Visit History', url: '/staff/visits', icon: BarChart3 },
+        { title: 'Visit History', url: '/staff/visits', icon: Calendar },
       ];
     }
 

@@ -1,73 +1,194 @@
-# Welcome to your Lovable project
+# Proclean 1987 - Facility Management System
 
-## Project info
+A comprehensive facility management system built for tracking cleaning staff visits, managing sites, and maintaining service quality through customizable checklists.
 
-**URL**: https://lovable.dev/projects/49b1c025-7a17-41a9-bbdb-ac6d9e1e1fc8
+## Features
 
-## How can I edit this code?
+### Multi-Role System
+- **Admin Dashboard**: Complete system management with user, site, and checklist administration
+- **Staff Portal**: Visit logging, site management, and checklist completion
+- **Client Interface**: Monitor assigned sites and view service history
 
-There are several ways of editing your application.
+### Core Functionality
+- **Site Management**: Create and manage facility locations with detailed information
+- **Visit Tracking**: Log visits with check-in/check-out times and notes
+- **Customizable Checklists**: Create reusable checklists for different site types
+- **User Management**: Role-based access control (Admin, Staff, Client)
+- **Database Inspector**: Real-time database monitoring and management tools
 
-**Use Lovable**
+## Tech Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/49b1c025-7a17-41a9-bbdb-ac6d9e1e1fc8) and start prompting.
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI Components**: shadcn/ui + Radix UI + Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **State Management**: TanStack Query (React Query)
+- **Form Handling**: React Hook Form + Zod validation
+- **Routing**: React Router v6
 
-Changes made via Lovable will be committed automatically to this repo.
+## Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ (recommended: use [nvm](https://github.com/nvm-sh/nvm))
+- A Supabase account and project
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Installation & Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 1. Clone the Repository
 
-Follow these steps:
+```bash
+git clone <your-git-url>
+cd client-site-log
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### 2. Install Dependencies
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 3. Environment Configuration
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Create a `.env` file in the project root with your Supabase credentials:
+
+```bash
+# Supabase Configuration
+# Get these values from your Supabase project dashboard at https://app.supabase.com
+VITE_SUPABASE_URL=your_supabase_project_url_here
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# Example values (replace with your actual values):
+# VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+# VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**How to get your Supabase credentials:**
+
+1. Go to [https://app.supabase.com](https://app.supabase.com)
+2. Select your project (or create a new one)
+3. Go to Settings → API
+4. Copy the "Project URL" as `VITE_SUPABASE_URL`
+5. Copy the "anon public" key as `VITE_SUPABASE_ANON_KEY`
+
+⚠️ **Important**: The `VITE_` prefix is required for Vite to expose these variables to the browser. These are public keys and safe to expose in the frontend.
+
+### 4. Database Setup
+
+The application uses Supabase migrations for database schema management. The migrations in `/supabase/migrations/` will be automatically applied to your Supabase project.
+
+Key database features:
+- Row Level Security (RLS) enabled on all tables
+- Role-based access control
+- Automated profile creation on user signup
+- Proper foreign key relationships
+
+### 5. Start Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Available Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run build:dev` - Build in development mode
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Project Structure
 
-## What technologies are used for this project?
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── AppSidebar.tsx  # Main navigation sidebar
+│   ├── Layout.tsx      # Application layout wrapper
+│   └── ErrorBoundary.tsx # Error handling
+├── contexts/           # React contexts
+│   └── AuthContext.tsx # Authentication state management
+├── hooks/              # Custom React hooks
+├── integrations/       # External service integrations
+│   └── supabase/       # Supabase client and types
+├── lib/                # Utility functions and validations
+├── pages/              # Route components
+│   ├── admin/          # Admin-only pages
+│   ├── staff/          # Staff role pages
+│   └── client/         # Client role pages
+└── assets/             # Static assets
+```
 
-This project is built with:
+## User Roles & Permissions
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Admin (`admin`)
+- Full system access
+- User management (create, update, delete users)
+- Site management (all sites)
+- Checklist management
+- Visit oversight (all visits)
+- Database inspection tools
 
-## How can I deploy this project?
+### Staff (`staff`)
+- View all sites
+- Create and manage visits
+- Complete checklists during visits
+- View personal visit history
 
-Simply open [Lovable](https://lovable.dev/projects/49b1c025-7a17-41a9-bbdb-ac6d9e1e1fc8) and click on Share -> Publish.
+### Client (`client`)
+- View assigned sites only
+- Monitor visit history for their sites
+- Read-only access to their facilities
 
-## Can I connect a custom domain to my Lovable project?
+## API Integration
 
-Yes, you can!
+The application uses Supabase's auto-generated TypeScript types for type safety. Database schema changes are automatically reflected in the TypeScript types.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Key Database Tables
+- `profiles` - User profiles with role information
+- `sites` - Facility locations with visit scheduling
+- `visits` - Service visit logs with check-in/out times
+- `checklists` - Reusable task lists for different site types
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Development Notes
+
+### Authentication Flow
+1. User signs up/signs in via Supabase Auth
+2. Profile is automatically created via database trigger
+3. Role-based redirecting and UI rendering
+4. Row Level Security enforces permissions at the database level
+
+### Error Handling
+- Global error boundary catches React errors
+- Query error boundaries for data fetching errors
+- Form validation with Zod schemas
+- Comprehensive error messaging
+
+## Deployment
+
+The application can be deployed to any static hosting service:
+
+1. Build the project: `npm run build`
+2. Deploy the `dist/` folder to your hosting service
+3. Configure environment variables on your hosting platform
+4. Ensure your Supabase project is properly configured for production
+
+Popular hosting options:
+- Vercel (recommended for React apps)
+- Netlify
+- AWS S3 + CloudFront
+- GitHub Pages
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## Support
+
+For issues related to:
+- **Application bugs**: Open a GitHub issue
+- **Supabase setup**: Check [Supabase Documentation](https://supabase.com/docs)
+- **Deployment**: Consult your hosting provider's documentation

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { supabase } from '@/integrations/supabase/client';
+import { warn, error } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +57,7 @@ export default function AdminUsers() {
           .rpc('get_user_auth_info');
 
         if (authError) {
-          console.log('Auth data function error:', authError.message);
+          warn('Auth data function error', { error: authError.message });
         } else if (authData) {
           // Create a map for quick lookup
           authData.forEach((authUser: any) => {
@@ -68,8 +69,8 @@ export default function AdminUsers() {
             });
           });
         }
-      } catch (error) {
-        console.log('Failed to fetch auth data:', error);
+      } catch (err) {
+        error('Failed to fetch auth data', err);
       }
 
       // Combine profile data with auth data

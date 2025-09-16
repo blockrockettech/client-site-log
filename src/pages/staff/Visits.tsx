@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, MapPin, Clock, CheckSquare, FileText, Plus, Eye } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckSquare, FileText, Plus, Eye, User } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { Link } from 'react-router-dom';
 
@@ -16,9 +16,13 @@ type Visit = Database['public']['Tables']['visits']['Row'] & {
   sites: {
     site_name: string;
     site_address: string;
+    profile_id: string;
   } | null;
   checklists: {
     title: string;
+  } | null;
+  site_owner: {
+    full_name: string | null;
   } | null;
 };
 
@@ -39,7 +43,8 @@ export default function StaffVisits() {
           *,
           sites (
             site_name,
-            site_address
+            site_address,
+            profile_id
           ),
           checklists (
             title
@@ -50,7 +55,29 @@ export default function StaffVisits() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Visit[];
+
+      // Get site owner information for each visit
+      const visitsWithOwners = await Promise.all(
+        data.map(async (visit) => {
+          let site_owner = null;
+          
+          if (visit.sites?.profile_id) {
+            const { data: ownerData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', visit.sites.profile_id)
+              .maybeSingle(); // Use maybeSingle to handle cases where profile doesn't exist
+            
+            site_owner = ownerData;
+          }
+
+          return {
+            ...visit,
+            site_owner
+          };
+        })
+      );
+      return visitsWithOwners as Visit[];
     },
     enabled: !!user?.id,
   });
@@ -176,8 +203,8 @@ export default function StaffVisits() {
                       <div className="space-y-1">
                         <div className="font-medium">{visit.sites?.site_name || 'Unknown Site'}</div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {visit.sites?.site_address || 'No address'}
+                          <User className="h-3 w-3" />
+                          {visit.site_owner?.full_name || 'Unassigned'}
                         </div>
                       </div>
                     </TableCell>
@@ -261,8 +288,8 @@ export default function StaffVisits() {
                   <div className="space-y-1">
                     <p className="font-medium">{selectedVisit.sites?.site_name}</p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {selectedVisit.sites?.site_address}
+                      <User className="h-3 w-3" />
+                      Client: {selectedVisit.site_owner?.full_name || 'Unassigned'}
                     </p>
                   </div>
                 </div>

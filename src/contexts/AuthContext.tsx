@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { authError, dbError } from '@/lib/logger';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single();
         
         if (error) {
-          console.error('Error fetching profile:', error);
+          dbError('Failed to fetch user profile', error);
           return;
         }
         
@@ -44,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(profile);
         }
       } catch (error) {
-        console.error('Unexpected error fetching profile:', error);
+        authError('Unexpected error fetching profile', error);
       }
     };
 
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          authError('Error getting session', error);
           if (isMounted) {
             setLoading(false);
           }
@@ -91,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Unexpected error initializing auth:', error);
+        authError('Unexpected error initializing auth', error);
         if (isMounted) {
           setLoading(false);
         }
