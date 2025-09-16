@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,15 @@ export default function DatabaseInspector() {
       return data;
     },
   });
+
+  // Map profile UUID -> friendly name for easy lookups across sections
+  const profileNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    profiles?.forEach((p: any) => {
+      map.set(p.id, p.full_name || 'Unnamed');
+    });
+    return map;
+  }, [profiles]);
 
   // Check sites and their assignments
   const { data: sites } = useQuery({
@@ -146,7 +156,6 @@ export default function DatabaseInspector() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID (truncated)</TableHead>
                   <TableHead>Full Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created</TableHead>
@@ -155,9 +164,6 @@ export default function DatabaseInspector() {
               <TableBody>
                 {profiles.map((profile) => (
                   <TableRow key={profile.id}>
-                    <TableCell className="font-mono text-sm">
-                      {profile.id.slice(0, 8)}...
-                    </TableCell>
                     <TableCell className="font-medium">
                       {profile.full_name || 'Unnamed'}
                     </TableCell>
@@ -186,7 +192,7 @@ export default function DatabaseInspector() {
             <Building2 className="h-5 w-5" />
             Sites & Client Assignments
           </CardTitle>
-          <CardDescription>Sites and their assigned clients (profile_id relationships)</CardDescription>
+          <CardDescription>Sites and their assigned clients</CardDescription>
         </CardHeader>
         <CardContent>
           {sites && sites.length > 0 ? (
@@ -195,7 +201,6 @@ export default function DatabaseInspector() {
                 <TableRow>
                   <TableHead>Site Name</TableHead>
                   <TableHead>Address</TableHead>
-                  <TableHead>Profile ID (Client)</TableHead>
                   <TableHead>Assigned Client</TableHead>
                   <TableHead>Schedule</TableHead>
                 </TableRow>
@@ -205,13 +210,6 @@ export default function DatabaseInspector() {
                   <TableRow key={site.id}>
                     <TableCell className="font-medium">{site.site_name}</TableCell>
                     <TableCell className="text-muted-foreground">{site.site_address}</TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {site.profile_id ? (
-                        <span className="text-green-600">{site.profile_id.slice(0, 8)}...</span>
-                      ) : (
-                        <span className="text-red-600">NULL</span>
-                      )}
-                    </TableCell>
                     <TableCell>
                       {site.profiles ? (
                         <Badge variant="default">{site.profiles.full_name}</Badge>
@@ -250,7 +248,6 @@ export default function DatabaseInspector() {
                   <TableHead>Site</TableHead>
                   <TableHead>Site Owner</TableHead>
                   <TableHead>Staff Member</TableHead>
-                  <TableHead>Visit Profile ID</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -260,18 +257,13 @@ export default function DatabaseInspector() {
                     <TableCell className="font-medium">{visit.sites?.site_name}</TableCell>
                     <TableCell>
                       {visit.sites?.profile_id ? (
-                        <span className="text-green-600 font-mono text-sm">
-                          {visit.sites.profile_id.slice(0, 8)}...
-                        </span>
+                        <Badge variant="secondary">{profileNameById.get(visit.sites.profile_id) || 'Unknown'}</Badge>
                       ) : (
-                        <span className="text-red-600">No Owner</span>
+                        <Badge variant="destructive">No Owner</Badge>
                       )}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{visit.profiles?.full_name || 'Unknown'}</Badge>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-muted-foreground">
-                      {visit.profile_id.slice(0, 8)}...
                     </TableCell>
                   </TableRow>
                 ))}

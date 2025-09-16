@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Calendar, MapPin, Clock, CheckSquare, FileText, Eye, User } from 'lucide-react';
+import { Calendar, Clock, CheckSquare, FileText, Eye, User } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 
@@ -15,12 +15,17 @@ type Visit = Database['public']['Tables']['visits']['Row'] & {
   sites: {
     site_name: string;
     site_address: string;
+    profile_id: string;
   } | null;
   checklists: {
     title: string;
   } | null;
   profiles: {
     full_name: string | null;
+  } | null;
+  site_owner: {
+    full_name: string | null;
+    role: string;
   } | null;
 };
 
@@ -53,7 +58,8 @@ export default function ClientVisits() {
           *,
           sites (
             site_name,
-            site_address
+            site_address,
+            profile_id
           ),
           checklists (
             title
@@ -67,7 +73,23 @@ export default function ClientVisits() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Visit[];
+      // Attach site owner (client) profile for each visit, similar to admin page
+      const visitsWithOwners = await Promise.all(
+        (data || []).map(async (visit) => {
+          let site_owner = null as Visit['site_owner'];
+          if (visit.sites?.profile_id) {
+            const { data: ownerData } = await supabase
+              .from('profiles')
+              .select('full_name, role')
+              .eq('id', visit.sites.profile_id)
+              .single();
+            site_owner = ownerData as Visit['site_owner'];
+          }
+          return { ...visit, site_owner } as Visit;
+        })
+      );
+
+      return visitsWithOwners as Visit[];
     },
     enabled: !!user?.id,
   });
@@ -188,8 +210,8 @@ export default function ClientVisits() {
                       <div className="space-y-1">
                         <div className="font-medium">{visit.sites?.site_name || 'Unknown Site'}</div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {visit.sites?.site_address || 'No address'}
+                          <User className="h-3 w-3" />
+                          {visit.site_owner?.full_name || 'Unassigned'}
                         </div>
                       </div>
                     </TableCell>
