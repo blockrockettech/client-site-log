@@ -47,10 +47,10 @@ export default function AddVisit() {
         .from('sites')
         .select(`
           *,
-          profiles!sites_profile_id_fkey (
+          profiles (
             full_name
           ),
-          checklists!sites_checklist_id_fkey (
+          checklists (
             id,
             title,
             items

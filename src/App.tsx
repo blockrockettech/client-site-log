@@ -12,7 +12,10 @@ import Dashboard from "./pages/Dashboard";
 import AdminSites from "./pages/admin/Sites";
 import AdminChecklists from "./pages/admin/Checklists";
 import AdminUsers from "./pages/admin/Users";
+import AdminDatabaseInspector from "./pages/admin/DatabaseInspector";
+import AdminVisits from "./pages/admin/Visits";
 import ClientSites from "./pages/client/Sites";
+import ClientVisits from "./pages/client/Visits";
 import AddVisit from "./pages/staff/AddVisit";
 import StaffVisits from "./pages/staff/Visits";
 import StaffSites from "./pages/staff/Sites";
@@ -42,14 +45,13 @@ const App = () => (
               
               {/* Client Routes */}
               <Route path="/client/sites" element={<Layout><QueryErrorBoundary><ClientSites /></QueryErrorBoundary></Layout>} />
-              <Route path="/client/visits" element={<Layout><div className="p-6">Client Visits - Coming Soon</div></Layout>} />
+              <Route path="/client/visits" element={<Layout><QueryErrorBoundary><ClientVisits /></QueryErrorBoundary></Layout>} />
               
             {/* Admin routes */}
             <Route path="/admin/checklists" element={<Layout><QueryErrorBoundary><AdminChecklists /></QueryErrorBoundary></Layout>} />
               <Route path="/admin/users" element={<Layout><QueryErrorBoundary><AdminUsers /></QueryErrorBoundary></Layout>} />
-              <Route path="/admin/visits" element={<Layout><div className="p-6">All Visits - Coming Soon</div></Layout>} />
-              <Route path="/admin/reports" element={<Layout><div className="p-6">Reports - Coming Soon</div></Layout>} />
-              <Route path="/admin/settings" element={<Layout><div className="p-6">Settings - Coming Soon</div></Layout>} />
+              <Route path="/admin/visits" element={<Layout><QueryErrorBoundary><AdminVisits /></QueryErrorBoundary></Layout>} />
+              <Route path="/admin/db-inspect" element={<Layout><QueryErrorBoundary><AdminDatabaseInspector /></QueryErrorBoundary></Layout>} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

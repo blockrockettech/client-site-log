@@ -44,7 +44,7 @@ export default function ClientSites() {
 
       if (error) throw error;
       
-      // Group by site_id and get latest visit
+      // Group by site_id and count visits properly
       const stats: { [key: number]: any } = {};
       data.forEach(visit => {
         if (!stats[visit.site_id]) {
@@ -54,6 +54,10 @@ export default function ClientSites() {
           };
         } else {
           stats[visit.site_id].totalVisits += 1;
+          // Keep the most recent visit date
+          if (new Date(visit.visit_date) > new Date(stats[visit.site_id].lastVisit)) {
+            stats[visit.site_id].lastVisit = visit.visit_date;
+          }
         }
       });
       

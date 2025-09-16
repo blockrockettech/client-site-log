@@ -16,8 +16,7 @@ import {
   Calendar,
   CheckSquare,
   Users,
-  BarChart3,
-  Settings,
+  Search,
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -37,8 +36,7 @@ export function AppSidebar() {
         { title: 'Checklists', url: '/admin/checklists', icon: CheckSquare },
         { title: 'Users', url: '/admin/users', icon: Users },
         { title: 'All Visits', url: '/admin/visits', icon: Calendar },
-        { title: 'Reports', url: '/admin/reports', icon: BarChart3 },
-        { title: 'Settings', url: '/admin/settings', icon: Settings },
+        { title: 'DB Inspector', url: '/admin/db-inspect', icon: Search },
       ];
     }
 

@@ -17,61 +17,43 @@ export default function StaffSites() {
   const { data: sites, isLoading } = useQuery({
     queryKey: ['staff-sites'],
     queryFn: async () => {
+      // Use the same approach as admin Sites.tsx (which works)
       const { data, error } = await supabase
         .from('sites')
         .select(`
           *,
-          profiles!sites_profile_id_fkey (
+          profiles (
             full_name
-          ),
-          checklists!sites_checklist_id_fkey (
-            title
           )
         `)
         .order('visit_day', { ascending: true })
         .order('visit_time', { ascending: true });
 
-      if (error) {
-        // Try fallback query without explicit foreign key constraint
-        const fallbackResult = await supabase
-          .from('sites')
-          .select(`
-            *,
-            profiles (
-              full_name
-            )
-          `)
-          .order('visit_day', { ascending: true })
-          .order('visit_time', { ascending: true });
+      if (error) throw error;
 
-        if (fallbackResult.error) throw fallbackResult.error;
-
-        // Get checklist data separately for each site
-        const sitesWithChecklists = await Promise.all(
-          fallbackResult.data.map(async (site) => {
-            if (site.checklist_id) {
-              const { data: checklistData } = await supabase
-                .from('checklists')
-                .select('title')
-                .eq('id', site.checklist_id)
-                .single();
-              
-              return {
-                ...site,
-                checklists: checklistData
-              };
-            }
+      // Get checklist data separately for each site
+      const sitesWithChecklists = await Promise.all(
+        data.map(async (site) => {
+          if (site.checklist_id) {
+            const { data: checklistData } = await supabase
+              .from('checklists')
+              .select('title')
+              .eq('id', site.checklist_id)
+              .single();
+            
             return {
               ...site,
-              checklists: null
+              checklists: checklistData
             };
-          })
-        );
+          }
+          return {
+            ...site,
+            checklists: null
+          };
+        })
+      );
 
-        return sitesWithChecklists as unknown as Site[];
-      }
-
-      return data as Site[];
+      return sitesWithChecklists as unknown as Site[];
     },
   });
 
