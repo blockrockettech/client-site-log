@@ -44,7 +44,10 @@ export default function StaffVisits() {
           sites (
             site_name,
             site_address,
-            profile_id
+            profile_id,
+            profiles!sites_profile_id_fkey (
+              full_name
+            )
           ),
           checklists (
             title
@@ -56,27 +59,14 @@ export default function StaffVisits() {
 
       if (error) throw error;
 
-      // Get site owner information for each visit
-      const visitsWithOwners = await Promise.all(
-        data.map(async (visit) => {
-          let site_owner = null;
-          
-          if (visit.sites?.profile_id) {
-            const { data: ownerData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', visit.sites.profile_id)
-              .maybeSingle(); // Use maybeSingle to handle cases where profile doesn't exist
-            
-            site_owner = ownerData;
-          }
-
-          return {
-            ...visit,
-            site_owner
-          };
-        })
-      );
+      // Transform the data to match the expected structure
+      const visitsWithOwners = data.map((visit) => ({
+        ...visit,
+        site_owner: visit.sites?.profiles ? {
+          full_name: visit.sites.profiles.full_name
+        } : null
+      }));
+      
       return visitsWithOwners as Visit[];
     },
     enabled: !!user?.id,

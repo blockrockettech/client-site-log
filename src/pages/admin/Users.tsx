@@ -50,7 +50,7 @@ export default function AdminUsers() {
       if (error) throw error;
       
       // Get auth data using admin function
-      let authUsersMap = new Map();
+      const authUsersMap = new Map();
       
       try {
         const { data: authData, error: authError } = await supabase

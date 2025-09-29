@@ -8,7 +8,7 @@ import { isDevelopment } from './env';
 type LogLevel = 'error' | 'warn' | 'info' | 'debug';
 
 interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
@@ -31,12 +31,12 @@ class Logger {
     return `${prefix} ${message}`;
   }
 
-  error(message: string, error?: any, context?: LogContext): void {
+  error(message: string, error?: unknown, context?: LogContext): void {
     if (!this.shouldLog('error')) return;
 
     const fullContext = {
       ...context,
-      ...(error && { error: error.message || error }),
+      ...(error && { error: (error as Error)?.message || error }),
     };
 
     console.error(this.formatMessage('error', message, fullContext));
@@ -63,15 +63,15 @@ class Logger {
   }
 
   // Specialized logging methods for common use cases
-  authError(message: string, error?: any): void {
+  authError(message: string, error?: unknown): void {
     this.error(`Authentication Error: ${message}`, error, { category: 'auth' });
   }
 
-  dbError(message: string, error?: any): void {
+  dbError(message: string, error?: unknown): void {
     this.error(`Database Error: ${message}`, error, { category: 'database' });
   }
 
-  apiError(message: string, error?: any, endpoint?: string): void {
+  apiError(message: string, error?: unknown, endpoint?: string): void {
     this.error(`API Error: ${message}`, error, { category: 'api', endpoint });
   }
 

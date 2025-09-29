@@ -4,7 +4,7 @@ This directory contains all static assets used in the Proclean 1987 application.
 
 ## Structure
 
-```
+```text
 src/assets/
 ├── icons/          # SVG icons and logos
 │   └── logo.svg    # Main application logo

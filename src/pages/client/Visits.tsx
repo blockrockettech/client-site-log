@@ -59,7 +59,11 @@ export default function ClientVisits() {
           sites (
             site_name,
             site_address,
-            profile_id
+            profile_id,
+            profiles!sites_profile_id_fkey (
+              full_name,
+              role
+            )
           ),
           checklists (
             title
@@ -73,21 +77,15 @@ export default function ClientVisits() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      // Attach site owner (client) profile for each visit, similar to admin page
-      const visitsWithOwners = await Promise.all(
-        (data || []).map(async (visit) => {
-          let site_owner = null as Visit['site_owner'];
-          if (visit.sites?.profile_id) {
-            const { data: ownerData } = await supabase
-              .from('profiles')
-              .select('full_name, role')
-              .eq('id', visit.sites.profile_id)
-              .single();
-            site_owner = ownerData as Visit['site_owner'];
-          }
-          return { ...visit, site_owner } as Visit;
-        })
-      );
+      
+      // Transform the data to match the expected structure
+      const visitsWithOwners = (data || []).map((visit) => ({
+        ...visit,
+        site_owner: visit.sites?.profiles ? {
+          full_name: visit.sites.profiles.full_name,
+          role: visit.sites.profiles.role
+        } : null
+      }));
 
       return visitsWithOwners as Visit[];
     },

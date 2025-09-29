@@ -70,7 +70,7 @@ export const withRoleProtection = (
   requiredRole?: 'admin' | 'staff' | 'client',
   allowedRoles?: Array<'admin' | 'staff' | 'client'>
 ) => {
-  return (props: any) => (
+  return (props: Record<string, unknown>) => (
     <ProtectedRoute requiredRole={requiredRole} allowedRoles={allowedRoles}>
       <Component {...props} />
     </ProtectedRoute>
