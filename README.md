@@ -165,6 +165,12 @@ The application uses Supabase's auto-generated TypeScript types for type safety.
 
 ## Deployment
 
+### Quick Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/client-site-log)
+
+### Manual Deployment
+
 The application can be deployed to any static hosting service:
 
 1. Build the project: `npm run build`
@@ -172,11 +178,22 @@ The application can be deployed to any static hosting service:
 3. Configure environment variables on your hosting platform
 4. Ensure your Supabase project is properly configured for production
 
-Popular hosting options:
-- Vercel (recommended for React apps)
+**Recommended hosting options:**
+- **Vercel** (recommended - see [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed guide)
 - Netlify
 - AWS S3 + CloudFront
 - GitHub Pages
+
+### Environment Variables for Production
+
+Set these environment variables in your hosting platform:
+
+```bash
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions.
 
 ## Contributing
 
