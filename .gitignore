@@ -103,3 +103,5 @@ temp/
 .temp/
 supabase/.temp/
 *.temp
+supabase/logs/
+supabase/logs/*
