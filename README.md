@@ -209,3 +209,9 @@ For issues related to:
 - **Application bugs**: Open a GitHub issue
 - **Supabase setup**: Check [Supabase Documentation](https://supabase.com/docs)
 - **Deployment**: Consult your hosting provider's documentation
+
+# examples
+
+Checklist
+
+Clinical Room 1

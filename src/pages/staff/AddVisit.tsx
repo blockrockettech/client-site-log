@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchSitesWithRelations } from '@/lib/supabase-queries';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,69 +43,7 @@ export default function AddVisit() {
   const { data: sites, isLoading: sitesLoading, error: sitesError } = useQuery({
     queryKey: ['sites'],
     queryFn: async () => {
-      // Try with explicit foreign key first
-      let { data, error } = await supabase
-        .from('sites')
-        .select(`
-          *,
-          profiles (
-            full_name
-          ),
-          checklists (
-            id,
-            title,
-            items
-          )
-        `)
-        .order('site_name', { ascending: true });
-
-      // If that fails, try without explicit foreign key constraint
-      if (error && error.message.includes('foreign key')) {
-        
-        const result = await supabase
-          .from('sites')
-          .select(`
-            *,
-            profiles (
-              full_name
-            )
-          `)
-          .order('site_name', { ascending: true });
-
-        if (result.error) {
-          throw result.error;
-        }
-
-        // Get checklist data separately for each site
-        const sitesWithChecklists = await Promise.all(
-          result.data.map(async (site) => {
-            if (site.checklist_id) {
-              const { data: checklistData } = await supabase
-                .from('checklists')
-                .select('id, title, items')
-                .eq('id', site.checklist_id)
-                .single();
-              
-              return {
-                ...site,
-                checklists: checklistData
-              };
-            }
-            return {
-              ...site,
-              checklists: null
-            };
-          })
-        );
-
-        data = sitesWithChecklists as any;
-        error = null;
-      }
-
-      if (error) {
-        throw error;
-      }
-      
+      const data = await fetchSitesWithRelations();
       return data as unknown as Site[];
     },
   });
